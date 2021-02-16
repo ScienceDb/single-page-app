@@ -1,8 +1,28 @@
 import React from 'react';
+import { Grid, Paper, makeStyles } from '@material-ui/core';
 import EnhancedTable from '../components/enhancedtable/EnhancedTable';
 
-const attributes = ['attr1', 'attr2', 'attr3'];
+const attributes = ['idField', 'stringField', 'intField', 'floatField'];
+
+const useStyles = makeStyles((theme) => ({
+  root: {
+    marginTop: 72,
+    height: `calc(100vh - 72px - 48px)`,
+  },
+  paper: {
+    overflow: 'auto',
+    height: `calc(100vh - 72px  - 48px)`,
+    minWidth: 570,
+  },
+}));
 
 export default function TableLayout() {
-  return <EnhancedTable attributes={attributes} />;
+  const classes = useStyles();
+  return (
+    <div className={classes.root}>
+      <Paper className={classes.paper}>
+        <EnhancedTable attributes={attributes} />
+      </Paper>
+    </div>
+  );
 }

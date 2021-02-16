@@ -3,29 +3,27 @@ import {
   TableSortLabel,
   TableCell,
   Typography,
-  Grid,
   Tooltip,
 } from '@material-ui/core';
 
 export default function EnhancedTableHeadCell({
   label,
   icon: Icon,
-  sortable,
+  disableSort,
   tooltip,
   ...props
 }) {
-  const { active, direction, sortDirection } = props;
-
+  const { active } = props;
+  console.log(disableSort, active);
   return (
     <TableCell
-      key="idField"
-      align="left"
-      padding="checkbox"
       sortDirection={true}
+      {...props}
       // sortDirection={orderBy === label ? order : false}
     >
       <TableSortLabel
-        active={true}
+        active={false}
+        disabled={disableSort}
         // active={orderBy === label}
         // direction={order}
         direction="asc"
@@ -33,36 +31,19 @@ export default function EnhancedTableHeadCell({
         //   onRequestSort(event, 'idField');
         // }}
       >
-        <Grid
-          container
-          alignItems="center"
-          alignContent="center"
-          wrap="nowrap"
-          spacing={1}
+        {Icon && tooltip && (
+          <Tooltip title={tooltip}>
+            <Icon fontSize="small" color="disabled" />
+          </Tooltip>
+        )}
+        <Typography
+          color="inherit"
+          variant="caption"
+          display="inline"
+          noWrap={true}
         >
-          {Icon && tooltip && (
-            <Grid item>
-              {/* <Tooltip title={t('modelPanels.internalId', 'Unique Identifier')}> */}
-              <Tooltip title={tooltip}>
-                <Icon
-                  fontSize="small"
-                  color="disabled"
-                  style={{ marginTop: 8 }}
-                />
-              </Tooltip>
-            </Grid>
-          )}
-          <Grid item>
-            <Typography
-              color="inherit"
-              variant="caption"
-              display="inline"
-              noWrap={true}
-            >
-              {label}
-            </Typography>
-          </Grid>
-        </Grid>
+          {label}
+        </Typography>
       </TableSortLabel>
     </TableCell>
   );
