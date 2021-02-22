@@ -1,41 +1,31 @@
 import React from 'react';
-import {
-  TableSortLabel,
-  TableCell,
-  Typography,
-  Tooltip,
-} from '@material-ui/core';
+import { TableSortLabel, TableCell, Typography } from '@material-ui/core';
 
 export default function EnhancedTableHeadCell({
   label,
   icon: Icon,
   disableSort,
   tooltip,
+  activeOrder,
+  orderDirection,
+  onClick,
   ...props
 }) {
-  const { active } = props;
-  console.log(disableSort, active);
   return (
-    <TableCell
-      sortDirection={true}
-      {...props}
-      // sortDirection={orderBy === label ? order : false}
-    >
+    <TableCell {...props}>
       <TableSortLabel
-        active={false}
+        active={activeOrder}
         disabled={disableSort}
-        // active={orderBy === label}
-        // direction={order}
-        direction="asc"
-        // onClick={(event) => {
-        //   onRequestSort(event, 'idField');
-        // }}
+        direction={orderDirection}
+        onClick={(event) => {
+          onClick(event, label);
+        }}
       >
-        {Icon && tooltip && (
+        {/* {Icon && tooltip && (
           <Tooltip title={tooltip}>
             <Icon fontSize="small" color="disabled" />
           </Tooltip>
-        )}
+        )} */}
         <Typography
           color="inherit"
           variant="caption"

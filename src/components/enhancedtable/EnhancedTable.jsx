@@ -12,41 +12,21 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const record = {
-  idField: { value: 'myId_1', type: 'String', readOnly: true },
-
-  stringField: { value: 'Hello World', type: 'String' },
-  intField: { value: 2, type: 'Int' },
-  floatField: { value: 5.6, type: 'Float' },
-
-  asd: { value: 'asddd', type: 'String' },
-  asdd: { value: 'asddd', type: 'String' },
-  asddd: { value: 'asddd', type: 'String' },
-  asdddd: { value: 'asddd', type: 'String' },
-  asddddd: { value: 'asddd', type: 'String' },
-  asdddddd: { value: 'asddd', type: 'String' },
-  // asddddddd: { value: 'asddd', type: 'String' },
-  // asdddddddd: { value: 'asddd', type: 'String' },
-  // bsddddddd: { value: 'asddd', type: 'String' },
-  // ssddddddd: { value: 'asddd', type: 'String' },
-  // csddddddd: { value: 'asddd', type: 'String' },
-  // fsdddddddd: { value: 'asddd', type: 'String' },
-  // gsdddddddd: { value: 'asddd', type: 'String' },
-  // hsdddddddd: { value: 'asddd', type: 'String' },
-};
-
-const records = Array(5).fill(record);
-
-export default function ModelTable({ attributes }) {
+export default function EnhancedTable({ records, attributes }) {
+  // ? To accomodate associations will need to recive the operation as well
   const classes = useStyles();
 
   return (
+    // TODO attribute props
+    // ? since the TableHead is static it can directly recieve the attributes.
+    // ? Be aware that depending on the datamodel id needs to be added
     <div className={classes.tableWrapper}>
       <Table stickyHeader size="small">
-        <EnhancedTableHead attributes={record} />
+        <EnhancedTableHead attributes={records[0]} />
         <TableBody>
-          {records.map((record) => (
-            <EnhancedTableRow record={record} />
+          {records.map((record, index) => (
+            // TODO key should use primaryKey
+            <EnhancedTableRow record={record} key={`${record[0]}-${index}`} />
           ))}
         </TableBody>
       </Table>

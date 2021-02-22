@@ -31,19 +31,17 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function EnhancedTableRowIcon({ label, ...props }) {
+function EnhancedTableRowIcon({ label, to, ...props }) {
+  // TODO replace this with a Link (next link?)
   return (
     <TableCell padding="checkbox" align="center">
       <Tooltip title={label}>
         <IconButton
-          // id={'NoAssocEnhancedTable-row-iconButton-edit-' + item.idField}
           color="default"
-          // onClick={(event) => {
-          //   event.stopPropagation();
-          //   handleUpdateClicked(event, item);
-          // }}
+          onClick={() => {
+            alert(to);
+          }}
         >
-          {/* <Edit fontSize="small" className={classes.iconEdit} /> */}
           {props.children}
         </IconButton>
       </Tooltip>
@@ -52,40 +50,33 @@ function EnhancedTableRowIcon({ label, ...props }) {
 }
 
 export default function EnhancedTableRow({ record }) {
+  // TODO needs to be aware of the model to compose the correct Link to View/Update/Delete
+
   const classes = useStyles();
 
   return (
-    <TableRow
-      // id={'NoAssocEnhancedTable-row-' + item.idField}
-      hover
-      // onClick={(event) => handleClickOnRow(event, item)}
-      role="checkbox"
-      tabIndex={-1}
-      // key={item.idField}
-    >
-      {/* ACTIONS 
-      TODO permissions*/}
-      <EnhancedTableRowIcon label="detail">
+    // TODO permissions
+    // TODO handleOnRowClick
+    // ? accomodate associations
+    <TableRow hover role="checkbox" tabIndex={-1}>
+      <EnhancedTableRowIcon label="detail" to="detail">
         <DetailIcon fontSize="small" className={classes.iconDetail} />
       </EnhancedTableRowIcon>
-      <EnhancedTableRowIcon label="edit">
+      <EnhancedTableRowIcon label="edit" to="edit">
         <EditIcon fontSize="small" className={classes.iconEdit} />
       </EnhancedTableRowIcon>
-      <EnhancedTableRowIcon label="delete">
+      <EnhancedTableRowIcon label="delete" to="delete">
         <DeleteIcon fontSize="small" className={classes.iconDelete} />
       </EnhancedTableRowIcon>
-      {/* ATTRIBUTES 
-      TODO alignment depending on type (int, float => right)*/}
-      {Object.keys(record).map((attribute) => (
+      {Object.keys(record).map((attribute, index) => (
         <TableCell
-          key={attribute}
+          key={`${attribute}-${index}`}
           align={
-            record[attribute].type === 'Int' ||
-            record[attribute].type === 'Float'
+            record[attribute].type.includes('Int') ||
+            record[attribute].type.includes('Float')
               ? 'right'
               : 'left'
           }
-          padding="default"
         >
           {String(
             record[attribute].value !== null ? record[attribute].value : ''

@@ -1,26 +1,34 @@
-import React from 'react';
-import { TableHead, TableRow } from '@material-ui/core';
+import { React, useState } from 'react';
+import { TableCell, TableHead, TableRow, Typography } from '@material-ui/core';
 import KeyIcon from '@material-ui/icons/VpnKey';
 import EnhancedTableHeadCell from './EnhancedTableHeadCell';
 
 export default function EnhancedTableHead({ attributes }) {
+  const [activeOrderCol, setActiveOrderCol] = useState(
+    attributes[Object.keys(attributes)[0]]
+  );
+  const [activeOrder, setActiveOrder] = useState('asc');
+
+  const handleTableHeadCellClick = (event, field) => {
+    const isAsc = activeOrderCol === field && activeOrder === 'asc';
+    setActiveOrder(isAsc ? 'desc' : 'asc');
+    setActiveOrderCol(field);
+  };
+
   return (
+    // TODO colspan depending on permissions
     <TableHead style={{ height: '2rem' }}>
       <TableRow>
-        {/* Details view 
-            TODO associations? */}
-        {/* <TableCell padding="checkbox" /> */}
-        {/* Edit | Delete Actions */}
-        <EnhancedTableHeadCell
-          label="Actions"
-          disableSort={true}
-          active={false}
-          padding="checkbox"
-          align="center"
-          size="small"
-          colSpan={3} // TODO dependent on permissions
-          width="6%"
-        />
+        <TableCell colSpan={3} align="center" padding="checkbox">
+          <Typography
+            color="inherit"
+            variant="caption"
+            display="inline"
+            noWrap={true}
+          >
+            Actions
+          </Typography>
+        </TableCell>
         {Object.keys(attributes).map((attribute, index) => (
           <EnhancedTableHeadCell
             label={attribute}
@@ -29,12 +37,16 @@ export default function EnhancedTableHead({ attributes }) {
               attributes[attribute].readOnly ? 'Unique Identifier' : null
             }
             align={
-              attributes[attribute].type === 'Int' ||
-              attributes[attribute].type === 'Float'
+              attributes[attribute].type.includes('Int') ||
+              attributes[attribute].type.includes('Float')
                 ? 'right'
                 : 'left'
             }
             disableSort={false}
+            activeOrder={activeOrderCol === attribute}
+            orderDirection={activeOrderCol === attribute ? activeOrder : 'asc'}
+            sortDirection={activeOrderCol === attribute ? activeOrder : false}
+            onClick={handleTableHeadCellClick}
             key={`EnhancedTableHeadCell-${attribute}-${index}`}
           />
         ))}
