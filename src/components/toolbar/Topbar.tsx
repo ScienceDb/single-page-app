@@ -12,7 +12,7 @@ import {
 import { MenuOutlined as MenuIcon } from '@material-ui/icons';
 import LanguageSwitcher from './LanguageSwitcher';
 import useAuth from '../../hooks/useAuth';
-
+import { useTranslation } from 'react-i18next';
 interface Props {
   isDrawerOpen: boolean;
   handleDrawerOpen: () => void;
@@ -26,12 +26,15 @@ export default function Topbar({
 }: Props): ReactElement {
   const classes = useStyles(topBarMargin);
   const { logout } = useAuth();
-
+  const { t, i18n } = useTranslation();
   const handleLogoutButtonClick = () => {
     logout({
       redirectTo: '/login',
     });
   };
+
+  console.log('something... ');
+  //i18n.changeLanguage('en');
 
   return (
     <AppBar
@@ -70,7 +73,7 @@ export default function Topbar({
             color="inherit"
             onClick={handleLogoutButtonClick}
           >
-            Logout
+            {t('toolBar.logout')}
           </Button>
         </div>
       </Toolbar>

@@ -9,6 +9,7 @@ import {
   Typography,
 } from '@material-ui/core';
 import Translate from '@material-ui/icons/TranslateRounded';
+import i18n from '../../i18n';
 
 export default function LanguageSwitcher(): ReactElement {
   const [translationAnchorEl, setTranslationAnchorEl] = useState<
@@ -30,6 +31,12 @@ export default function LanguageSwitcher(): ReactElement {
     { language: 'English', lcode: 'en-US' },
     { language: 'Deutsch', lcode: 'de-DE' },
   ]);
+
+  const handleTranslationMenuItemClick = (index: number) => {
+    setTranslationAnchorEl(undefined);
+    i18n.changeLanguage(translations.current[index].lcode);
+  };
+
   const classes = useStyles();
   return (
     <>
@@ -56,6 +63,7 @@ export default function LanguageSwitcher(): ReactElement {
             id={'MainPanel-menuItem-translation-' + translation.lcode}
             className={classes.translationMenuItem}
             key={translation.lcode}
+            onClick={() => handleTranslationMenuItemClick(index)}
           >
             <Typography variant="inherit" display="block" noWrap={true}>
               {translation.language}
