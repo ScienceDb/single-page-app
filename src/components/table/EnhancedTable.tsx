@@ -13,6 +13,7 @@ import {
 } from '@material-ui/core';
 import EnhancedTableHead from './EnhancedTableHead';
 import EnhancedTableRow, { ActionHandler } from './EnhancedTableRow';
+import TableToolBar from '@/components/tableToolBar/tableToolBar'
 import useSWR from 'swr';
 import { readMany } from '@/utils/requests';
 import useAuth from '@/hooks/useAuth';
@@ -116,8 +117,11 @@ export default function EnhancedTable({
   );
 
   return (
+    <>
+    <TableToolBar modelName={modelName} />
     <TableContainer component={Paper} className={classes.paper}>
       <div>{`TOOLBAR - ${modelName}`}</div>
+      
       <div className={classes.tableWrapper}>
         <Table stickyHeader size="small">
           <EnhancedTableHead
@@ -162,6 +166,7 @@ export default function EnhancedTable({
       </div>
       <div style={{ textAlign: 'right' }}>PAGINATION</div>
     </TableContainer>
+    </>
   );
 }
 

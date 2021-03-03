@@ -1,6 +1,6 @@
 import { getInflections } from '@/utils/inflection';
 import { ParsedAttribute } from '@/types/models';
-import { QueryModelTableRecords, QueryRecordAttributes } from '@/types/queries';
+import { QueryModelTableRecords, QueryRecordAttributes, QueryCsvTemplate, QueryBulkCreate } from '@/types/queries';
 
 /**
  * Compose a readMany graphql query to retrieve a list of model records.
@@ -65,6 +65,33 @@ export const queryRecordAttributes: QueryRecordAttributes = (
     query,
   };
 };
+
+export const queryCsvTemplate: QueryCsvTemplate = (
+  modelName
+) => {
+  const {nameCp} = getInflections(modelName);
+
+  const resolver = `csvTableTemplate${nameCp}`;
+  const query = `query {${resolver}}`
+
+  return {
+    resolver,
+    query
+  }
+}
+
+export const queryBulkCreate: QueryBulkCreate = (
+  modelName
+) => {
+  const {nameCp} = getInflections(modelName);
+
+  const resolver = `bulkAdd${nameCp}Csv`;
+  const query = `mutation {${resolver}}`;
+  return {
+    resolver,
+    query
+  }
+}
 
 /**
  * Convert an array of parsed attributes to a string of names. This function

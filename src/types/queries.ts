@@ -50,3 +50,12 @@ export type QueryRecordAttributes = (
   modelName: string,
   attributes: ParsedAttribute[]
 ) => RawQuery;
+
+export type QueryCsvTemplate = (
+  modelName: string
+) => RawQuery; 
+
+export type QueryBulkCreate = (
+  modelName: string,
+  file: File
+) => RawQuery
