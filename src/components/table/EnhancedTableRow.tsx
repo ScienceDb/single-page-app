@@ -19,8 +19,8 @@ interface EnhancedTableRowIconProps {
 }
 
 export type ActionHandler = (
-  primaryKey: string,
-  action: 'create' | 'read' | 'update' | 'delete'
+  action: 'create' | 'read' | 'update' | 'delete',
+  primaryKey?: string
 ) => void;
 
 interface EnhancedTableRowProps {
@@ -67,15 +67,15 @@ EnhancedTableRowProps): ReactElement {
   }, [attributes, record]);
 
   const handleReadAction = (): void => {
-    onAction(primaryKey, 'read');
+    onAction('read', primaryKey);
   };
 
   const handleUpdateAction = (): void => {
-    onAction(primaryKey, 'update');
+    onAction('update', primaryKey);
   };
 
   const handleDeleteAction = (): void => {
-    onAction(primaryKey, 'delete');
+    onAction('delete', primaryKey);
   };
 
   return (

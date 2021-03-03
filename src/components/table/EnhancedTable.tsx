@@ -13,7 +13,7 @@ import {
 } from '@material-ui/core';
 import EnhancedTableHead from './EnhancedTableHead';
 import EnhancedTableRow, { ActionHandler } from './EnhancedTableRow';
-import TableToolBar from '@/components/tableToolBar/tableToolBar'
+import TableToolBar from '@/components/tableToolBar/tableToolBar';
 import useSWR from 'swr';
 import { readMany, readOne } from '@/utils/requests';
 import useAuth from '@/hooks/useAuth';
@@ -82,25 +82,42 @@ export default function EnhancedTable({
   const [variables, dispatch] = useReducer(variablesReducer, initialVariables);
 
   const handleSetOrder = (value: QueryVariableOrder): void => {
+    console.log(value);
     dispatch({ type: 'SET_ORDER', value });
   };
 
-  const handleActionClick: ActionHandler = async (primaryKey, action) => {
+  const handleSetSearch = (value: string): void => {
+    let search = {
+      field: attributes[0].name,
+      value: value,
+      operator: 'eq',
+    } as QueryVariableSearch;
+    if (value === '')
+      search = {
+        field: undefined,
+        value: undefined,
+        operator: undefined,
+      };
+    dispatch({ type: 'SET_SEARCH', value: search });
+  };
+
+  const handleActionClick: ActionHandler = async (action, primaryKey) => {
     const route = `/${modelName}/item?${action}=${primaryKey}`;
     switch (action) {
       case 'read':
       case 'update':
         router.push(route);
         break;
+      case 'create':
+        router.push(`/${modelName}/item`);
+        break;
       case 'delete': {
-        console.log(action + ' - ' + primaryKey);
         const { query, resolver } = requests.delete;
         const request: ComposedQuery = {
           resolver,
           query,
           variables: { id: primaryKey },
         };
-        console.log(request);
         // TODO handle Errors
         // ? possibly mutate local data and run the refetch in background?
         if (auth.user?.token) {
@@ -134,11 +151,15 @@ export default function EnhancedTable({
   );
 
   return (
-    <>
-    <TableToolBar modelName={modelName} />
     <TableContainer component={Paper} className={classes.paper}>
-      <div>{`TOOLBAR - ${modelName}`}</div>
-      
+      <TableToolBar
+        modelName={modelName}
+        onAdd={handleActionClick}
+        onReload={() => mutate()}
+        onSearch={handleSetSearch}
+      />
+      {/* <div>{`TOOLBAR - ${modelName}`}</div> */}
+
       <div className={classes.tableWrapper}>
         <Table stickyHeader size="small">
           <EnhancedTableHead
@@ -162,28 +183,26 @@ export default function EnhancedTable({
             </Fade>
           )}
         </Table>
-        {!data && (
-          <Fade in={isValidating}>
-            <Box
-              display="flex"
-              width="100%"
-              height="100%"
-              position="absolute"
-              justifyContent="center"
-              alignItems="center"
-            >
-              {isValidating ? (
-                <CircularProgress color="primary" disableShrink={true} />
-              ) : (
-                <Typography variant="body1">No data to display</Typography>
-              )}
-            </Box>
-          </Fade>
-        )}
+        <Box
+          display="flex"
+          width="100%"
+          height="100%"
+          position="absolute"
+          justifyContent="center"
+          alignItems="center"
+        >
+          {isValidating && (
+            <Fade in={isValidating}>
+              <CircularProgress color="primary" disableShrink={true} />
+            </Fade>
+          )}
+          {!isValidating && Array.isArray(data) && data.length === 0 && (
+            <Typography variant="body1">No data to display</Typography>
+          )}
+        </Box>
       </div>
       <div style={{ textAlign: 'right' }}>PAGINATION</div>
     </TableContainer>
-    </>
   );
 }
 
