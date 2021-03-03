@@ -52,7 +52,6 @@ export async function graphql<R = unknown>(
   };
 }
 
-
 export async function graphqlUploadFile<R = unknown>(
   token: string,
   query: string,
@@ -90,7 +89,6 @@ export async function graphqlUploadFile<R = unknown>(
   };
 }
 
-
 export async function readMany(
   token: string,
   request: ComposedQuery
@@ -124,44 +122,37 @@ export async function readOne<T = unknown>(
 }
 
 //to be moved to types
-interface templateResponse{
-  [key:string]: string
+interface templateResponse {
+  [key: string]: string;
 }
 
-interface bulkCreateResponse{
-  [key:string]: string
+interface bulkCreateResponse {
+  [key: string]: string;
 }
 
-export async function csvTemplate<T = unknown >(
+export async function csvTemplate<T = unknown>(
   token: string,
-   request: ComposedQuery
-): Promise< string | null > {
+  request: ComposedQuery
+): Promise<string | null> {
+  const response = await graphql<templateResponse>(token, request.query);
 
-  const response = await graphql<templateResponse>(
-    token,
-    request.query
-  )
-
-  if(response.errors) throw response.errors;
+  if (response.errors) throw response.errors;
 
   return response.data ? response.data[request.resolver] : null;
 }
 
-export async function bulkCreate<T = unknown >(
+export async function bulkCreate<T = unknown>(
   token: string,
   request: ComposedQuery,
   file: File
-): Promise< string | null>{
-
+): Promise<string | null> {
   const response = await graphqlUploadFile<bulkCreateResponse>(
     token,
     request.query,
     file
-  )
+  );
 
-  if(response.errors) throw response.errors;
+  if (response.errors) throw response.errors;
 
   return response.data ? response.data[request.resolver] : null;
-
-
 }
