@@ -15,7 +15,7 @@ import EnhancedTableHead from './EnhancedTableHead';
 import EnhancedTableRow, { ActionHandler } from './EnhancedTableRow';
 import TableToolBar from '@/components/tableToolBar/tableToolBar'
 import useSWR from 'swr';
-import { readMany } from '@/utils/requests';
+import { readMany, readOne } from '@/utils/requests';
 import useAuth from '@/hooks/useAuth';
 import { ParsedAttribute } from '@/types/models';
 import {
@@ -30,7 +30,10 @@ import {
 interface EnhancedTableProps {
   modelName: string;
   attributes: ParsedAttribute[];
-  rawQuery: RawQuery;
+  requests: {
+    read: RawQuery;
+    delete: RawQuery;
+  };
 }
 
 type VariableAction =
@@ -70,7 +73,7 @@ const variablesReducer = (
 export default function EnhancedTable({
   modelName,
   attributes,
-  rawQuery,
+  requests,
 }: EnhancedTableProps): ReactElement {
   // ? To accomodate associations will need to recive the operation as well
   const classes = useStyles();
@@ -82,16 +85,30 @@ export default function EnhancedTable({
     dispatch({ type: 'SET_ORDER', value });
   };
 
-  const handleActionClick: ActionHandler = (primaryKey, action) => {
+  const handleActionClick: ActionHandler = async (primaryKey, action) => {
     const route = `/${modelName}/item?${action}=${primaryKey}`;
     switch (action) {
       case 'read':
       case 'update':
         router.push(route);
         break;
-      case 'delete':
+      case 'delete': {
         console.log(action + ' - ' + primaryKey);
+        const { query, resolver } = requests.delete;
+        const request: ComposedQuery = {
+          resolver,
+          query,
+          variables: { id: primaryKey },
+        };
+        console.log(request);
+        // TODO handle Errors
+        // ? possibly mutate local data and run the refetch in background?
+        if (auth.user?.token) {
+          await readOne(auth.user?.token, request);
+          mutate();
+        }
         break;
+      }
     }
   };
 
@@ -99,13 +116,13 @@ export default function EnhancedTable({
 
   const request = useMemo(() => {
     return {
-      query: rawQuery.query,
-      resolver: rawQuery.resolver,
+      query: requests.read.query,
+      resolver: requests.read.resolver,
       variables: variables,
     } as ComposedQuery<QueryModelTableRecordsVariables>;
-  }, [variables, rawQuery]);
+  }, [variables, requests.read]);
 
-  const { data, isValidating } = useSWR(
+  const { data, mutate, isValidating } = useSWR(
     auth?.user?.token ? [auth.user.token, request] : null,
     readMany,
     {
