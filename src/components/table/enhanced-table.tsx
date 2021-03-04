@@ -1,4 +1,4 @@
-import React, { useMemo, useReducer, ReactElement } from 'react';
+import React, { useMemo, useReducer, ReactElement, useState } from 'react';
 import { useRouter } from 'next/router';
 import {
   Table,
@@ -20,6 +20,7 @@ import useAuth from '@/hooks/useAuth';
 import { ParsedAttribute } from '@/types/models';
 import {
   ComposedQuery,
+  QueryModelTableRecordsCountVariables,
   QueryModelTableRecordsVariables,
   QueryVariableOrder,
   QueryVariablePagination,
@@ -27,19 +28,21 @@ import {
   RawQuery,
 } from '@/types/queries';
 
-interface EnhancedTableProps {
+export interface EnhancedTableProps {
   modelName: string;
   attributes: ParsedAttribute[];
   requests: {
     read: RawQuery;
     delete: RawQuery;
+    count: RawQuery;
   };
 }
 
 type VariableAction =
   | { type: 'SET_SEARCH'; value: QueryVariableSearch }
   | { type: 'SET_ORDER'; value: QueryVariableOrder }
-  | { type: 'SET_PAGINATION'; value: QueryVariablePagination };
+  | { type: 'SET_PAGINATION'; value: QueryVariablePagination }
+  | { type: 'RESET'; value: QueryVariablePagination };
 
 const variablesReducer = (
   variables: QueryModelTableRecordsVariables,
@@ -61,6 +64,12 @@ const variablesReducer = (
         ...variables,
         pagination: action.value,
       };
+    case 'RESET':
+      return {
+        search: undefined,
+        order: undefined,
+        pagination: { first: 25 },
+      };
   }
 };
 const initialVariables: QueryModelTableRecordsVariables = {
@@ -79,11 +88,14 @@ export default function EnhancedTable({
   const router = useRouter();
 
   const [variables, dispatch] = useReducer(variablesReducer, initialVariables);
+  const [pagination, setPagination] = useState({
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
 
   const handleSetOrder = (value: QueryVariableOrder): void => {
     dispatch({ type: 'SET_ORDER', value });
   };
-
   const handleActionClick: ActionHandler = async (primaryKey, action) => {
     const route = `/${modelName}/item?${action}=${primaryKey}`;
     switch (action) {
@@ -92,19 +104,18 @@ export default function EnhancedTable({
         router.push(route);
         break;
       case 'delete': {
-        console.log(action + ' - ' + primaryKey);
         const { query, resolver } = requests.delete;
         const request: ComposedQuery = {
           resolver,
           query,
           variables: { id: primaryKey },
         };
-        console.log(request);
         // TODO handle Errors
         // ? possibly mutate local data and run the refetch in background?
         if (auth.user?.token) {
           await readOne(auth.user?.token, request);
-          mutate();
+          mutateRecords();
+          mutateCount();
         }
         break;
       }
@@ -113,7 +124,8 @@ export default function EnhancedTable({
 
   const { auth } = useAuth();
 
-  const request = useMemo(() => {
+  // Data Fetching: Records
+  const readRequest = useMemo(() => {
     return {
       query: requests.read.query,
       resolver: requests.read.resolver,
@@ -121,9 +133,43 @@ export default function EnhancedTable({
     } as ComposedQuery<QueryModelTableRecordsVariables>;
   }, [variables, requests.read]);
 
-  const { data, mutate, isValidating } = useSWR(
-    auth?.user?.token ? [auth.user.token, request] : null,
+  const {
+    data: records,
+    mutate: mutateRecords,
+    isValidating: isValidatingRecords,
+  } = useSWR(
+    auth?.user?.token ? [auth.user.token, readRequest] : null,
     readMany,
+    {
+      // TODO error handling
+      onError: (error) => {
+        console.error(error);
+      },
+      onSuccess: (data) => {
+        setPagination({
+          hasNextPage: data.pageInfo.hasNextPage ?? false,
+          hasPreviousPage: data.pageInfo.hasPreviousPage ?? false,
+        });
+      },
+    }
+  );
+
+  // Data Fetching: Count
+  const countRequest = useMemo(() => {
+    return {
+      query: requests.count.query,
+      resolver: requests.count.resolver,
+      variables: variables.search,
+    } as ComposedQuery<QueryModelTableRecordsCountVariables>;
+  }, [variables.search, requests.count]);
+
+  const {
+    data: count,
+    mutate: mutateCount,
+    isValidating: isValidatingCount,
+  } = useSWR(
+    auth?.user?.token ? [auth.user.token, countRequest] : null,
+    readOne,
     {
       // TODO error handling
       onError: (error) => {
@@ -133,7 +179,6 @@ export default function EnhancedTable({
   );
 
   const handlePagination = (action: string): void => {
-    console.log(data?.pageInfo);
     const limit = variables.pagination.first ?? variables.pagination.last;
     switch (action) {
       case 'first':
@@ -157,7 +202,7 @@ export default function EnhancedTable({
           type: 'SET_PAGINATION',
           value: {
             first: limit,
-            after: data ? data.pageInfo.endCursor : undefined,
+            after: records ? records.pageInfo.endCursor : undefined,
           },
         });
         break;
@@ -165,8 +210,8 @@ export default function EnhancedTable({
         dispatch({
           type: 'SET_PAGINATION',
           value: {
-            first: limit,
-            before: data ? data.pageInfo.startCursor : undefined,
+            last: limit,
+            before: records ? records.pageInfo.startCursor : undefined,
           },
         });
         break;
@@ -197,10 +242,10 @@ export default function EnhancedTable({
             attributes={attributes}
             handleSetOrder={handleSetOrder}
           />
-          {data && !isValidating && (
-            <Fade in={!isValidating}>
+          {records?.data && !isValidatingRecords && (
+            <Fade in={!isValidatingRecords}>
               <TableBody>
-                {data.data.map((record, index) => (
+                {records.data.map((record, index) => (
                   // TODO key should use primaryKey
                   <EnhancedTableRow
                     attributes={attributes}
@@ -213,7 +258,7 @@ export default function EnhancedTable({
             </Fade>
           )}
         </Table>
-        <Box
+        {/* <Box
           display="flex"
           width="100%"
           height="100%"
@@ -221,29 +266,31 @@ export default function EnhancedTable({
           justifyContent="center"
           alignItems="center"
         >
-          {isValidating && (
-            <Fade in={isValidating}>
+          {isValidatingRecords && (
+            <Fade in={isValidatingRecords}>
               <CircularProgress color="primary" disableShrink={true} />
             </Fade>
           )}
-          {!isValidating && Array.isArray(data) && data.length === 0 && (
-            <Typography variant="body1">No data to display</Typography>
-          )}
-        </Box>
+          {!isValidatingRecords &&
+            Array.isArray(records) &&
+            records.length === 0 && (
+              <Typography variant="body1">No data to display</Typography>
+            )}
+        </Box> */}
       </div>
-      <div>
-        <RecordsTablePagination
-          onPagination={handlePagination}
-          count={30}
-          options={[5, 10, 15, 20, 25, 50]}
-          paginationLimit={variables.pagination.first}
-          onPaginationLimitChange={handlePaginationLimitChange}
-          hasFirstPage={data ? data.pageInfo.hasPreviousPage : false}
-          hasLastPage={data ? data.pageInfo.hasNextPage : false}
-          hasPreviousPage={data ? data.pageInfo.hasPreviousPage : false}
-          hasNextPage={data ? data.pageInfo.hasNextPage : false}
-        />
-      </div>
+      <RecordsTablePagination
+        onPagination={handlePagination}
+        count={count}
+        options={[5, 10, 15, 20, 25, 50]}
+        paginationLimit={
+          variables.pagination.first ?? variables.pagination.last
+        }
+        onPaginationLimitChange={handlePaginationLimitChange}
+        hasFirstPage={pagination.hasPreviousPage}
+        hasLastPage={pagination.hasNextPage}
+        hasPreviousPage={pagination.hasPreviousPage}
+        hasNextPage={pagination.hasNextPage}
+      />
     </TableContainer>
   );
 }

@@ -1,13 +1,14 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import {
-  Toolbar,
   IconButton,
   Tooltip,
   InputBase,
   InputLabel,
   MenuItem,
   Select,
+  Box,
+  FormControl,
 } from '@material-ui/core';
 import {
   FirstPage,
@@ -28,7 +29,8 @@ const useStyles = makeStyles(() => ({
   },
   paginationLimit: {
     minWidth: '5rem',
-    marginLeft: '2rem',
+    marginLeft: '1rem',
+    marginRight: '1rem',
   },
 }));
 
@@ -44,11 +46,11 @@ export default function RecordsTablePagination(props) {
       props.onPaginationLimitChange(event);
     }
   };
+  console.log(props.hasFirstPage);
   return (
-    <Toolbar className={classes.root}>
-      {/* Row Selector */}
-      <div className={classes.paginationLimit}>
-        <InputLabel>Rows</InputLabel>
+    <Box display="flex" alignItems="center" marginTop="2rem">
+      <FormControl className={classes.paginationLimit}>
+        <InputLabel shrink>Rows</InputLabel>
         <Select
           value={props.paginationLimit}
           onChange={handlePaginationLimitChange}
@@ -59,16 +61,18 @@ export default function RecordsTablePagination(props) {
             </MenuItem>
           ))}
         </Select>
-      </div>
-      <div className={classes.count}>
-        <InputLabel shrink>Count</InputLabel>
-        <InputBase value={props.count} disabled={true} />
-      </div>
-      <Tooltip title="First page">
+      </FormControl>
+      {props.count && (
+        <div>
+          <InputLabel shrink>Count</InputLabel>
+          <InputBase value={props.count} disabled={true} />
+        </div>
+      )}
+      <Tooltip title="First page" style={{ marginLeft: 'auto' }}>
         <span>
           <IconButton
             onClick={handleOnPagination('first')}
-            disabled={!props.hasFirstPage}
+            // disabled={!props.hasFirstPage}
           >
             <FirstPage />
           </IconButton>
@@ -78,7 +82,7 @@ export default function RecordsTablePagination(props) {
         <span>
           <IconButton
             onClick={handleOnPagination('backward')}
-            disabled={!props.hasPreviousPage}
+            // disabled={!props.hasPreviousPage}
           >
             <KeyboardArrowLeft />
           </IconButton>
@@ -88,7 +92,7 @@ export default function RecordsTablePagination(props) {
         <span>
           <IconButton
             onClick={handleOnPagination('forward')}
-            disabled={!props.hasNextPage}
+            // disabled={!props.hasNextPage}
           >
             <KeyboardArrowRight />
           </IconButton>
@@ -98,12 +102,12 @@ export default function RecordsTablePagination(props) {
         <span>
           <IconButton
             onClick={handleOnPagination('last')}
-            disabled={!props.hasLastPage}
+            // disabled={!props.hasLastPage}
           >
             <LastPage />
           </IconButton>
         </span>
       </Tooltip>
-    </Toolbar>
+    </Box>
   );
 }
