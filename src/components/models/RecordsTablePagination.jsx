@@ -1,6 +1,5 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { useTranslation } from 'react-i18next';
 import {
   Toolbar,
   IconButton,
@@ -32,9 +31,9 @@ const useStyles = makeStyles(() => ({
     marginLeft: '2rem',
   },
 }));
+
 export default function RecordsTablePagination(props) {
   const classes = useStyles();
-  const { t } = useTranslation();
   const handleOnPagination = (action) => () => {
     if (props.onPagination) {
       props.onPagination(action);
@@ -49,7 +48,7 @@ export default function RecordsTablePagination(props) {
     <Toolbar className={classes.root}>
       {/* Row Selector */}
       <div className={classes.paginationLimit}>
-        <InputLabel>{t('modelPanels.rows', 'Rows')}</InputLabel>
+        <InputLabel>Rows</InputLabel>
         <Select
           value={props.paginationLimit}
           onChange={handlePaginationLimitChange}
@@ -62,40 +61,48 @@ export default function RecordsTablePagination(props) {
         </Select>
       </div>
       <div className={classes.count}>
-        <InputLabel shrink>{t('modelPanels.count', 'Count')}</InputLabel>
+        <InputLabel shrink>Count</InputLabel>
         <InputBase value={props.count} disabled={true} />
       </div>
-      <Tooltip title={t('modelPanels.goToFirstPage', 'First page')}>
-        <IconButton
-          onClick={handleOnPagination('first')}
-          disabled={!props.hasFirstPage}
-        >
-          <FirstPage />
-        </IconButton>
+      <Tooltip title="First page">
+        <span>
+          <IconButton
+            onClick={handleOnPagination('first')}
+            disabled={!props.hasFirstPage}
+          >
+            <FirstPage />
+          </IconButton>
+        </span>
       </Tooltip>
-      <Tooltip title={t('modelPanels.goToPreviousPage', 'Previous page')}>
-        <IconButton
-          onClick={handleOnPagination('backward')}
-          disabled={!props.hasPreviousPage}
-        >
-          <KeyboardArrowLeft />
-        </IconButton>
+      <Tooltip title="Previous page">
+        <span>
+          <IconButton
+            onClick={handleOnPagination('backward')}
+            disabled={!props.hasPreviousPage}
+          >
+            <KeyboardArrowLeft />
+          </IconButton>
+        </span>
       </Tooltip>
-      <Tooltip title={t('modelPanels.goToNextPage', 'Next page')}>
-        <IconButton
-          onClick={handleOnPagination('forward')}
-          disabled={!props.hasNextPage}
-        >
-          <KeyboardArrowRight />
-        </IconButton>
+      <Tooltip title="Next page">
+        <span>
+          <IconButton
+            onClick={handleOnPagination('forward')}
+            disabled={!props.hasNextPage}
+          >
+            <KeyboardArrowRight />
+          </IconButton>
+        </span>
       </Tooltip>
-      <Tooltip title={t('modelPanels.goToLastPage', 'Last page')}>
-        <IconButton
-          onClick={handleOnPagination('last')}
-          disabled={!props.hasLastPage}
-        >
-          <LastPage />
-        </IconButton>
+      <Tooltip title="Last page">
+        <span>
+          <IconButton
+            onClick={handleOnPagination('last')}
+            disabled={!props.hasLastPage}
+          >
+            <LastPage />
+          </IconButton>
+        </span>
       </Tooltip>
     </Toolbar>
   );

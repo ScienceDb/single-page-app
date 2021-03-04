@@ -13,6 +13,7 @@ import {
 } from '@material-ui/core';
 import EnhancedTableHead from './enhanced-tablehead';
 import EnhancedTableRow, { ActionHandler } from './enhanced-tablerow';
+import RecordsTablePagination from '../models/RecordsTablePagination';
 import useSWR from 'swr';
 import { readMany, readOne } from '@/utils/requests';
 import useAuth from '@/hooks/useAuth';
@@ -40,12 +41,6 @@ type VariableAction =
   | { type: 'SET_ORDER'; value: QueryVariableOrder }
   | { type: 'SET_PAGINATION'; value: QueryVariablePagination };
 
-const initialVariables: QueryModelTableRecordsVariables = {
-  search: undefined,
-  order: undefined,
-  pagination: { first: 10 },
-};
-
 const variablesReducer = (
   variables: QueryModelTableRecordsVariables,
   action: VariableAction
@@ -68,13 +63,18 @@ const variablesReducer = (
       };
   }
 };
+const initialVariables: QueryModelTableRecordsVariables = {
+  search: undefined,
+  order: undefined,
+  pagination: { first: 5 },
+};
 
 export default function EnhancedTable({
   modelName,
   attributes,
   requests,
 }: EnhancedTableProps): ReactElement {
-  // ? To accomodate associations will need to recive the operation as well
+  // ? To accomodate associations will need to receive the operation as well
   const classes = useStyles();
   const router = useRouter();
 
@@ -132,6 +132,62 @@ export default function EnhancedTable({
     }
   );
 
+  const handlePagination = (action: string): void => {
+    console.log(data?.pageInfo);
+    const limit = variables.pagination.first ?? variables.pagination.last;
+    switch (action) {
+      case 'first':
+        dispatch({
+          type: 'SET_PAGINATION',
+          value: {
+            first: limit,
+          },
+        });
+        break;
+      case 'last':
+        dispatch({
+          type: 'SET_PAGINATION',
+          value: {
+            last: limit,
+          },
+        });
+        break;
+      case 'forward':
+        dispatch({
+          type: 'SET_PAGINATION',
+          value: {
+            first: limit,
+            after: data ? data.pageInfo.endCursor : undefined,
+          },
+        });
+        break;
+      case 'backward':
+        dispatch({
+          type: 'SET_PAGINATION',
+          value: {
+            first: limit,
+            before: data ? data.pageInfo.startCursor : undefined,
+          },
+        });
+        break;
+    }
+  };
+
+  const handlePaginationLimitChange = (
+    event: React.ChangeEvent<{ value: number }>
+  ): void => {
+    const limit = variables.pagination.first ?? variables.pagination.last;
+    if (event.target.value !== limit) {
+      dispatch({
+        type: 'SET_PAGINATION',
+        value: {
+          first: event.target.value,
+          includeCursor: false,
+        },
+      });
+    }
+  };
+
   return (
     <TableContainer component={Paper} className={classes.paper}>
       <div>{`TOOLBAR - ${modelName}`}</div>
@@ -144,7 +200,7 @@ export default function EnhancedTable({
           {data && !isValidating && (
             <Fade in={!isValidating}>
               <TableBody>
-                {data.map((record, index) => (
+                {data.data.map((record, index) => (
                   // TODO key should use primaryKey
                   <EnhancedTableRow
                     attributes={attributes}
@@ -175,7 +231,19 @@ export default function EnhancedTable({
           )}
         </Box>
       </div>
-      <div style={{ textAlign: 'right' }}>PAGINATION</div>
+      <div>
+        <RecordsTablePagination
+          onPagination={handlePagination}
+          count={30}
+          options={[5, 10, 15, 20, 25, 50]}
+          paginationLimit={variables.pagination.first}
+          onPaginationLimitChange={handlePaginationLimitChange}
+          hasFirstPage={data ? data.pageInfo.hasPreviousPage : false}
+          hasLastPage={data ? data.pageInfo.hasNextPage : false}
+          hasPreviousPage={data ? data.pageInfo.hasPreviousPage : false}
+          hasNextPage={data ? data.pageInfo.hasNextPage : false}
+        />
+      </div>
     </TableContainer>
   );
 }
