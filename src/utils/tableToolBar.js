@@ -1,3 +1,4 @@
+import { parse } from "@babel/core";
 
 export function downloadFile(data, name) {
   let file = data.join('\n');
@@ -7,4 +8,39 @@ export function downloadFile(data, name) {
   link.setAttribute('download', name);
   document.body.appendChild(link);
   link.click();
+}
+
+export function createSearch( value, attributes ){
+
+
+  const search_attributes = attributes.map( a =>{
+
+    const search_attribute = {
+      field: a.name,
+      value: value,
+      operator: "eq"
+    } 
+
+    switch(a.type){
+      case 'Int':
+        if(!isNaN(value)){
+          return search_attribute;
+        }
+        break;
+      case  'Float':
+        if(!isNaN(parseFloat(value))){
+          return search_attribute;
+        }
+      case 'Boolean':
+          if(value==='true' || value==='false'){
+            return search_attribute;
+          }
+      case 'String':
+          return search_attribute;
+      default:
+        return undefined;
+    }
+  } )
+
+  return search_attributes.filter(x => x!==undefined);
 }

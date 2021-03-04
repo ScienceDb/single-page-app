@@ -26,7 +26,7 @@ import {
   QueryVariableSearch,
   RawQuery,
 } from '@/types/queries';
-
+import { createSearch } from '@/utils/tableToolBar';
 interface EnhancedTableProps {
   modelName: string;
   attributes: ParsedAttribute[];
@@ -87,17 +87,26 @@ export default function EnhancedTable({
   };
 
   const handleSetSearch = (value: string): void => {
+    const se = createSearch( value, attributes);
+
+    // let search = {
+    //   field: attributes[0].name,
+    //   value: value,
+    //   operator: 'eq'
+    // } as QueryVariableSearch;
+
     let search = {
-      field: attributes[0].name,
-      value: value,
-      operator: 'eq',
+      operator: "or",
+      search: se
     } as QueryVariableSearch;
-    if (value === '')
+
+    if (value === ''){
       search = {
         field: undefined,
         value: undefined,
         operator: undefined,
       };
+    }
     dispatch({ type: 'SET_SEARCH', value: search });
   };
 
